@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Repair Management System</title>
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Standalone CSS Stylesheet -->
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#" onclick="showSection('track-page')">
+                <i class="fa-solid fa-compass me-2 text-warning fs-3"></i>
+                <span class="d-none d-sm-inline">GPS Repair Service</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Logged in navigation links (Hidden by default) -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3" id="main-menu" style="display: none;">
+                    <li class="nav-item">
+                        <a class="nav-link nav-btn" id="nav-dashboard" onclick="showSection('dashboard-page')">
+                            <i class="fa-solid fa-chart-pie me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-btn" id="nav-manage" onclick="showSection('manage-page')">
+                            <i class="fa-solid fa-list-check me-1"></i> จัดการงานซ่อม
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-btn" id="nav-add" onclick="showSection('add-page')">
+                            <i class="fa-solid fa-square-plus me-1"></i> รับเครื่องซ่อม
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-btn" id="nav-reports" onclick="showSection('reports-page')">
+                            <i class="fa-solid fa-file-invoice-dollar me-1"></i> รายงาน
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-btn" id="nav-settings" onclick="showSection('settings-page')">
+                            <i class="fa-solid fa-gears me-1"></i> ตั้งค่า
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Light/Dark Mode Switcher -->
+                    <li class="nav-item me-3">
+                        <button class="btn btn-link nav-link text-white shadow-none border-0" id="theme-toggle-btn" onclick="toggleTheme()" title="สลับธีม สว่าง/มืด">
+                            <i class="fa-solid fa-moon"></i>
+                        </button>
+                    </li>
+                    <!-- Auth Controls -->
+                    <li class="nav-item" id="login-nav-item">
+                        <a class="btn btn-outline-light px-3 py-1.5 btn-sm rounded-pill" onclick="showSection('login-page')">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> เข้าสู่ระบบช่าง
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown" id="user-profile-menu" style="display: none;">
+                        <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fs-4 me-2"></i>
+                            <span id="user-display-name">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                            <li><span class="dropdown-item-text text-muted small" id="user-display-role">Role</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" onclick="logoutUser()">
+                                    <i class="fa-solid fa-right-from-bracket me-2"></i> ออกจากระบบ
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container pb-5">
+        
+        <!-- SECTION 1: Public Status Tracking -->
+        <div id="track-page" class="page-section active">
+            <div class="tracking-wrapper">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-compass text-primary fs-1 mb-3"></i>
+                    <h2>ติดตามสถานะงานซ่อม GPS</h2>
+                    <p class="text-muted">ใส่หมายเลขใบรับซ่อม, Serial Number หรือ IMEI เพื่อตรวจสอบสถานะ</p>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-9">
+                        <form id="publicTrackForm" onsubmit="handlePublicTrack(event)">
+                            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
+                                <span class="input-group-text bg-white border-0 ps-4"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" id="trackInput" class="form-control border-0 ps-2" placeholder="เช่น GPS-20260001, SN: 123456" required>
+                                <button type="submit" class="btn btn-primary px-4 border-0">ตรวจสอบสถานะ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tracking Results (Hidden by default) -->
+                <div id="trackResultSection" class="mt-5" style="display: none;">
+                    <div class="card border-0 p-4 shadow-sm bg-white rounded-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4 flex-wrap">
+                            <div>
+                                <h4 class="mb-1 text-primary" id="res-RepairID">GPS-20260001</h4>
+                                <small class="text-muted">วันที่รับเครื่อง: <span id="res-ReceiveDate">2026-06-16</span></small>
+                            </div>
+                            <div>
+                                <span class="status-badge" id="res-StatusBadge">สถานะ</span>
+                            </div>
+                        </div>
+
+                        <!-- Timeline steps representation -->
+                        <div class="timeline-steps" id="res-Timeline">
+                            <div class="timeline-step" id="t-step-1"><div class="timeline-icon">1</div><div class="timeline-text">รับเครื่องแล้ว</div></div>
+                            <div class="timeline-step" id="t-step-2"><div class="timeline-icon">2</div><div class="timeline-text">รอตรวจสอบ</div></div>
+                            <div class="timeline-step" id="t-step-3"><div class="timeline-icon">3</div><div class="timeline-text">กำลังซ่อม</div></div>
+                            <div class="timeline-step" id="t-step-4"><div class="timeline-icon">4</div><div class="timeline-text">รออะไหล่</div></div>
+                            <div class="timeline-step" id="t-step-5"><div class="timeline-icon">5</div><div class="timeline-text">ซ่อมเสร็จ</div></div>
+                            <div class="timeline-step" id="t-step-6"><div class="timeline-icon">6</div><div class="timeline-text">ส่งคืนแล้ว</div></div>
+                        </div>
+
+                        <!-- Details Table -->
+                        <div class="row g-3 mt-4">
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-3 h-100">
+                                    <h6 class="text-muted border-bottom pb-2 mb-2"><i class="fa-solid fa-tablet-screen-button me-2"></i>ข้อมูลอุปกรณ์</h6>
+                                    <p class="mb-1"><b>ยี่ห้อ:</b> <span id="res-Brand">-</span></p>
+                                    <p class="mb-1"><b>รุ่น:</b> <span id="res-Model">-</span></p>
+                                    <p class="mb-1"><b>อาการเสีย:</b> <span id="res-Problem" class="text-danger">-</span></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-3 h-100">
+                                    <h6 class="text-muted border-bottom pb-2 mb-2"><i class="fa-solid fa-clock me-2"></i>ข้อมูลเวลาและการอัปเดต</h6>
+                                    <p class="mb-1"><b>วันนัดส่งคืน:</b> <span id="res-DueDate">-</span></p>
+                                    <p class="mb-1"><b>วันที่เสร็จสิ้น:</b> <span id="res-CompleteDate">-</span></p>
+                                    <p class="mb-0"><b>อัปเดตล่าสุด:</b> <span id="res-LastUpdate">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Public Photo Gallery -->
+                        <div class="mt-4" id="res-PhotosDiv" style="display: none;">
+                            <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fa-solid fa-image me-2"></i>รูปภาพความคืบหน้า</h6>
+                            <div class="row g-2 text-center" id="res-PhotosGallery">
+                                <!-- Dynamic photos go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Staff Login Page -->
+        <div id="login-page" class="page-section">
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <div class="card card-glass p-4 border-0 mt-3">
+                        <div class="text-center mb-4">
+                            <i class="fa-solid fa-user-shield text-primary fs-1 mb-2"></i>
+                            <h3 class="mb-1">เข้าสู่ระบบการซ่อม</h3>
+                            <p class="text-muted small">กรอกบัญชีผู้ใช้งานเพื่อจัดการงานและระบบ</p>
+                        </div>
+                        
+                        <!-- Backend Web API configuration box -->
+                        <div class="bg-warning bg-opacity-10 border border-warning border-opacity-20 p-3 rounded-3 mb-4 no-print">
+                            <label class="form-label small fw-bold text-dark"><i class="fa-solid fa-link me-1"></i>Google Apps Script Web App URL *</label>
+                            <input type="url" id="configApiUrl" class="form-control form-control-sm bg-white" placeholder="https://script.google.com/macros/s/.../exec">
+                            <div class="form-text small text-muted">ใส่ URL หลังจากการดีพลอยใน Apps Script เพื่อเรียกข้อมูล</div>
+                        </div>
+
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">ชื่อผู้ใช้งาน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-end-0 bg-white"><i class="fa-solid fa-user text-muted"></i></span>
+                                    <input type="text" id="loginUsername" class="form-control border-start-0 ps-1" required placeholder="admin">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold">รหัสผ่าน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-end-0 bg-white"><i class="fa-solid fa-lock text-muted"></i></span>
+                                    <input type="password" id="loginPassword" class="form-control border-start-0 ps-1" required placeholder="••••••••">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3"><i class="fa-solid fa-right-to-bracket me-2"></i> ลงชื่อเข้าใช้งาน</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Dashboard -->
+        <div id="dashboard-page" class="page-section">
+            <h3 class="mb-4"><i class="fa-solid fa-chart-line me-2 text-primary"></i>สรุปรายงานแดชบอร์ด</h3>
+            
+            <!-- Dashboard counter cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3" onclick="filterByStatusCounter('')">
+                    <div class="card card-counter bg-white p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 text-muted small">งานทั้งหมด</p>
+                                <h3 id="dash-Total" class="mb-0 fw-bold text-dark">0</h3>
+                            </div>
+                            <div class="rounded-pill bg-light p-3"><i class="fa-solid fa-briefcase text-primary fa-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3" onclick="filterByStatusCounter('รอ')">
+                    <div class="card card-counter bg-white p-3 shadow-sm" style="border-left-color: #0284c7 !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 text-muted small">งานรอดำเนินการ</p>
+                                <h3 id="dash-Pending" class="mb-0 fw-bold text-dark">0</h3>
+                            </div>
+                            <div class="rounded-pill bg-light p-3"><i class="fa-solid fa-clock text-info fa-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3" onclick="filterByStatusCounter('กำลังซ่อม')">
+                    <div class="card card-counter bg-white p-3 shadow-sm" style="border-left-color: #f59e0b !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 text-muted small">กำลังซ่อมแซม</p>
+                                <h3 id="dash-Fixing" class="mb-0 fw-bold text-dark">0</h3>
+                            </div>
+                            <div class="rounded-pill bg-light p-3"><i class="fa-solid fa-screwdriver-wrench text-warning fa-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3" onclick="filterByStatusCounter('ซ่อมเสร็จ')">
+                    <div class="card card-counter bg-white p-3 shadow-sm" style="border-left-color: #10b981 !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 text-muted small">ซ่อมเสร็จ/ส่งมอบแล้ว</p>
+                                <h3 id="dash-Finished" class="mb-0 fw-bold text-dark">0</h3>
+                            </div>
+                            <div class="rounded-pill bg-light p-3"><i class="fa-solid fa-circle-check text-success fa-xl"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and quick links -->
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div class="card p-4 border-0 shadow-sm h-100">
+                        <h5 class="mb-4 text-primary fw-bold"><i class="fa-solid fa-chart-column me-2"></i>สถิติจำนวนงานซ่อมรายเดือน</h5>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4 border-0 shadow-sm h-100 bg-gradient">
+                        <h5 class="mb-3 text-primary fw-bold"><i class="fa-solid fa-circle-info me-2"></i>ข้อมูลช่วยเหลือช่าง</h5>
+                        <div class="bg-light p-3 rounded-3 mb-3 border-start border-primary border-3 text-dark">
+                            <span class="fw-bold small d-block">รหัสเริ่มต้นระบบ:</span>
+                            <span class="small text-muted">Admin: admin / admin123</span>
+                        </div>
+                        <div class="bg-light p-3 rounded-3 mb-3 border-start border-success border-3 text-dark">
+                            <span class="fw-bold small d-block">การย้ายระบบไป GitHub:</span>
+                            <span class="small text-muted">ระบบฝั่งหน้าบ้านโฮสต์ด้วย GitHub Pages สมบูรณ์ โดยดึงข้อมูลผ่าน API ไปยัง Google Sheets</span>
+                        </div>
+                        <div class="bg-light p-3 rounded-3 border-start border-warning border-3 text-dark">
+                            <span class="fw-bold small d-block">ความปลอดภัย:</span>
+                            <span class="small text-muted">คุณสามารถบันทึกและแก้ไข Web App URL ในเบราว์เซอร์นี้ได้ หรือแก้ตัวแปร API_URL ที่แถวแรกของไฟล์ script.js สำหรับระบบจริง</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Manage Job Orders -->
+        <div id="manage-page" class="page-section">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h3><i class="fa-solid fa-list-check text-primary me-2"></i>รายการวิเคราะห์และสถานะงานซ่อม</h3>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" onclick="showSection('add-page')"><i class="fa-solid fa-plus me-1"></i> รับเรื่องซ่อมใหม่</button>
+                    <button class="btn btn-light border bg-white text-dark" onclick="reloadAllData()"><i class="fa-solid fa-arrows-rotate"></i> โหลดข้อมูลใหม่</button>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card border-0 p-3 mb-4 shadow-sm bg-white rounded-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-dark">กรองตามสถานะ</label>
+                        <select id="filter-Status" class="form-select" onchange="applyFilters()">
+                            <option value="">-- แสดงทั้งหมด --</option>
+                            <option value="รับเครื่องแล้ว">รับเครื่องแล้ว</option>
+                            <option value="รอตรวจสอบ">รอตรวจสอบ</option>
+                            <option value="กำลังซ่อม">กำลังซ่อม</option>
+                            <option value="รออะไหล่">รออะไหล่</option>
+                            <option value="ซ่อมเสร็จ">ซ่อมเสร็จ</option>
+                            <option value="ส่งคืนแล้ว">ส่งคืนแล้ว</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-dark">กรองตามช่างเทคนิค</label>
+                        <select id="filter-Technician" class="form-select" onchange="applyFilters()">
+                            <option value="">-- แสดงทั้งหมด --</option>
+                            <!-- Techs populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repairs Main DataTable -->
+            <div class="card border-0 p-3 shadow-sm rounded-4">
+                <div class="table-responsive">
+                    <table id="repairsTable" class="table table-hover w-100 table-striped">
+                        <thead>
+                            <tr>
+                                <th>รหัสงานซ่อม</th>
+                                <th>วันที่รับ</th>
+                                <th>ลูกค้า</th>
+                                <th>ยี่ห้อ/รุ่น</th>
+                                <th>Serial Number</th>
+                                <th>สถานะ</th>
+                                <th>ช่างผู้ดูแล</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic data rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: Add Repair intake form -->
+        <div id="add-page" class="page-section">
+            <h3 class="mb-4"><i class="fa-solid fa-circle-plus text-primary me-2"></i>เปิดใบรับเรื่องส่งซ่อมเครื่อง</h3>
+            
+            <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
+                <form id="addRepairForm" onsubmit="submitIntakeForm(event)">
+                    <!-- block 1 -->
+                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-user me-2"></i>1. ข้อมูลติดต่อลูกค้า</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark">ชื่อ-นามสกุลลูกค้า *</label>
+                            <input type="text" name="CustomerName" class="form-control" required placeholder="ระบุชื่อจริงและนามสกุล">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark">เบอร์โทรศัพท์ติดต่อ *</label>
+                            <input type="tel" name="Phone" class="form-control" required placeholder="เช่น 0801234567">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-dark">อีเมลติดต่อ</label>
+                            <input type="email" name="Email" class="form-control" placeholder="example@email.com">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold text-dark">ที่อยู่จัดส่งส่งเครื่องคืน</label>
+                            <input type="text" name="Address" class="form-control" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด">
+                        </div>
+                    </div>
+
+                    <!-- block 2 -->
+                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-microchip me-2"></i>2. รายละเอียดเครื่อง GPS</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-dark">ยี่ห้อเครื่อง</label>
+                            <input type="text" name="Brand" class="form-control" placeholder="เช่น Garmin, Kamaz">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-dark">รุ่นเครื่อง</label>
+                            <input type="text" name="Model" class="form-control" placeholder="เช่น Nuvi 2567">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-dark">Serial Number *</label>
+                            <input type="text" name="SerialNumber" class="form-control" required placeholder="หมายเลขเครื่องใต้บอดี้">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-dark">หมายเลข IMEI</label>
+                            <input type="text" name="IMEI" class="form-control" placeholder="ระบุเลขอีมี่ (ถ้ามี)">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold text-dark">อุปกรณ์เสริมที่ส่งมาด้วย</label>
+                            <input type="text" name="Accessories" class="form-control" placeholder="เช่น สายชาร์จรถยนต์, ขาตั้งดูดกระจก, SD Card">
+                        </div>
+                    </div>
+
+                    <!-- block 3 -->
+                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-toolbox me-2"></i>3. ข้อมูลวินิจฉัยและช่างเทคนิค</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark">อาการเสียของเครื่อง *</label>
+                            <textarea name="Problem" class="form-control" rows="3" required placeholder="อธิบายอาการอย่างละเอียด เช่น เปิดไม่ติด ค้างหน้าโลโก้ หาดาวเทียมไม่เจอ"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark">บันทึกเพิ่มเติม / เงื่อนไข</label>
+                            <textarea name="Note" class="form-control" rows="3" placeholder="เช่น มีรอยแตกมุมขวา มีสติ๊กเกอร์แปะมาด้วย"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-dark">ผู้รับเรื่อง/ช่างรับผิดชอบ</label>
+                            <select name="Technician" class="form-select" id="add-Technician-Select">
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-dark">วันที่นัดส่งคืนงาน</label>
+                            <input type="date" name="DueDate" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold text-dark">ค่าบริการเบื้องต้น</label>
+                            <input type="number" name="Price" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold text-dark">ราคาอะไหล่เบื้องต้น</label>
+                            <input type="number" name="PartsCost" class="form-control" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="text-end pt-3">
+                        <button type="reset" class="btn btn-light border me-2 px-4">ล้างข้อมูล</button>
+                        <button type="submit" class="btn btn-primary px-5"><i class="fa-solid fa-floppy-disk me-2"></i>บันทึกและส่งข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- SECTION 6: Reports & Financials -->
+        <div id="reports-page" class="page-section">
+            <h3 class="mb-4"><i class="fa-solid fa-file-excel text-primary me-2"></i>รายงานและข้อมูลสรุปการบริการ</h3>
+            
+            <!-- Filter box -->
+            <div class="card border-0 p-3 mb-4 shadow-sm bg-white rounded-3">
+                <form id="reportForm" onsubmit="generateReport(event)">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-dark">ประเภทรายงาน</label>
+                            <select id="report-Type" class="form-select" onchange="toggleReportSelectors()">
+                                <option value="daily">รายวัน (วันนี้)</option>
+                                <option value="monthly">รายเดือน</option>
+                                <option value="yearly">รายปี</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 report-monthly-selector" style="display: none;">
+                            <label class="form-label small fw-bold text-dark">เลือกเดือน</label>
+                            <select id="report-Month" class="form-select">
+                                <option value="1">มกราคม</option>
+                                <option value="2">กุมภาพันธ์</option>
+                                <option value="3">มีนาคม</option>
+                                <option value="4">เมษายน</option>
+                                <option value="5">พฤษภาคม</option>
+                                <option value="6">มิถุนายน</option>
+                                <option value="7">กรกฎาคม</option>
+                                <option value="8">สิงหาคม</option>
+                                <option value="9">กันยายน</option>
+                                <option value="10">ตุลาคม</option>
+                                <option value="11">พฤศจิกายน</option>
+                                <option value="12">ธันวาคม</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 report-yearly-selector" style="display: none;">
+                            <label class="form-label small fw-bold text-dark">เลือกปี (ค.ศ.)</label>
+                            <select id="report-Year" class="form-select">
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-magnifying-glass me-2"></i>เรียกดูรายงาน</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Aggregated Report Data Cards -->
+            <div class="row g-3 mb-4" id="reportSummaryCards" style="display: none;">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-info bg-opacity-10 p-3 h-100 text-center">
+                        <p class="text-secondary small mb-1 fw-bold">จำนวนเครื่องซ่อม</p>
+                        <h3 id="repSummary-Count" class="text-info fw-bold mb-0">0 เครื่อง</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-success bg-opacity-10 p-3 h-100 text-center">
+                        <p class="text-secondary small mb-1 fw-bold">รายได้ค่าซ่อมรวม</p>
+                        <h3 id="repSummary-Revenue" class="text-success fw-bold mb-0">฿0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-danger bg-opacity-10 p-3 h-100 text-center">
+                        <p class="text-secondary small mb-1 fw-bold">ต้นทุนอะไหล่รวม</p>
+                        <h3 id="repSummary-Cost" class="text-danger fw-bold mb-0">฿0.00</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-primary bg-opacity-10 p-3 h-100 text-center">
+                        <p class="text-secondary small mb-1 fw-bold">กำไรสุทธิ</p>
+                        <h3 id="repSummary-Profit" class="text-primary fw-bold mb-0">฿0.00</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export controls -->
+            <div class="d-flex justify-content-end gap-2 mb-3" id="reportExportButtons" style="display: none !important;">
+                <button class="btn btn-outline-danger btn-sm text-danger border-danger" onclick="exportReportToPDF()"><i class="fa-solid fa-file-pdf me-1"></i>Export PDF</button>
+                <button class="btn btn-outline-success btn-sm text-success border-success" onclick="exportReportToExcel()"><i class="fa-solid fa-file-excel me-1"></i>Export Excel</button>
+            </div>
+
+            <!-- Report Table -->
+            <div class="card border-0 p-3 shadow-sm rounded-4" id="reportTableContainer" style="display: none;">
+                <div class="table-responsive">
+                    <table id="reportsTable" class="table table-bordered table-striped w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>รหัสงาน</th>
+                                <th>วันที่รับ</th>
+                                <th>ลูกค้า</th>
+                                <th>ยี่ห้อ/รุ่น</th>
+                                <th>สถานะ</th>
+                                <th>ช่าง</th>
+                                <th>ค่าบริการ</th>
+                                <th>ค่าอะไหล่</th>
+                                <th>กำไร</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Loaded via report execution -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 7: System Settings & Technician accounts -->
+        <div id="settings-page" class="page-section">
+            <h3 class="mb-4"><i class="fa-solid fa-gears text-primary me-2"></i>การตั้งค่าระบบ</h3>
+            
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <!-- Shop setting form -->
+                    <div class="card border-0 p-4 shadow-sm bg-white rounded-4">
+                        <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-shop me-2"></i>ข้อมูลร้านค้า</h5>
+                        <form id="settingsForm" onsubmit="saveSystemSettings(event)">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">ชื่อร้านค้า</label>
+                                <input type="text" id="set-ShopName" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">เบอร์โทรศัพท์ติดต่อ</label>
+                                <input type="text" id="set-ShopPhone" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">ID Line ของร้าน</label>
+                                <input type="text" id="set-LineID" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">อีเมลติดต่อร้าน</label>
+                                <input type="email" id="set-ShopEmail" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">ที่อยู่อ้างอิง (สำหรับใบสั่งซ่อม)</label>
+                                <textarea id="set-ShopAddress" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการตั้งค่าร้าน</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <!-- Technicians List / CRUD -->
+                    <div class="card border-0 p-4 shadow-sm bg-white rounded-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h5 class="text-primary fw-bold mb-0"><i class="fa-solid fa-users-gear me-2"></i>จัดการรายชื่อช่างและสิทธิ์</h5>
+                            <button class="btn btn-primary btn-sm" onclick="openNewTechnicianModal()"><i class="fa-solid fa-plus me-1"></i> เพิ่มผู้ใช้งาน</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped w-100" id="techSettingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อผู้ใช้งาน</th>
+                                        <th>ชื่อช่าง</th>
+                                        <th>สิทธิ์</th>
+                                        <th>เปิดใช้งาน</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic Tech list loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1: Details & Photo Viewer -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white border-0 py-3">
+                    <h5 class="modal-title" id="modalDetailTitle">รายละเอียดประวัติการซ่อม</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <!-- Timeline Progress Bar -->
+                    <div class="card border-0 p-3 mb-4 shadow-sm rounded-3 bg-white">
+                        <h6 class="text-muted text-center mb-3">สถานะความคืบหน้าการทำงาน</h6>
+                        <div class="timeline-steps" id="modalTimeline">
+                            <div class="timeline-step" id="m-step-1"><div class="timeline-icon">1</div><div class="timeline-text">รับเครื่อง</div></div>
+                            <div class="timeline-step" id="m-step-2"><div class="timeline-icon">2</div><div class="timeline-text">ตรวจสอบ</div></div>
+                            <div class="timeline-step" id="m-step-3"><div class="timeline-icon">3</div><div class="timeline-text">ซ่อมแซม</div></div>
+                            <div class="timeline-step" id="m-step-4"><div class="timeline-icon">4</div><div class="timeline-text">รออะไหล่</div></div>
+                            <div class="timeline-step" id="m-step-5"><div class="timeline-icon">5</div><div class="timeline-text">ซ่อมเสร็จ</div></div>
+                            <div class="timeline-step" id="m-step-6"><div class="timeline-icon">6</div><div class="timeline-text">ส่งคืนแล้ว</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Split information grid -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 p-3 h-100 shadow-sm bg-white rounded-3">
+                                <h6 class="text-primary border-bottom pb-2 fw-bold"><i class="fa-solid fa-user me-2"></i>รายละเอียดลูกค้า</h6>
+                                <p class="mb-1"><b>ชื่อลูกค้า:</b> <span id="det-CustomerName">-</span></p>
+                                <p class="mb-1"><b>เบอร์โทรศัพท์:</b> <span id="det-Phone">-</span></p>
+                                <p class="mb-1"><b>อีเมล:</b> <span id="det-Email">-</span></p>
+                                <p class="mb-0"><b>ที่อยู่จัดส่งกลับ:</b> <span id="det-Address">-</span></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 p-3 h-100 shadow-sm bg-white rounded-3">
+                                <h6 class="text-primary border-bottom pb-2 fw-bold"><i class="fa-solid fa-satellite-dish me-2"></i>รายละเอียดเครื่อง GPS</h6>
+                                <p class="mb-1"><b>ยี่ห้อ / รุ่น:</b> <span id="det-BrandModel">-</span></p>
+                                <p class="mb-1"><b>Serial Number:</b> <span id="det-SerialNumber">-</span></p>
+                                <p class="mb-1"><b>IMEI:</b> <span id="det-IMEI">-</span></p>
+                                <p class="mb-0"><b>อุปกรณ์ที่ให้มาด้วย:</b> <span id="det-Accessories">-</span></p>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="card border-0 p-3 shadow-sm bg-white rounded-3">
+                                <h6 class="text-primary border-bottom pb-2 fw-bold"><i class="fa-solid fa-circle-exclamation me-2"></i>ข้อมูลงานซ่อมและผู้รับผิดชอบ</h6>
+                                <div class="row g-2 text-dark">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><b>อาการเสีย:</b> <span id="det-Problem" class="text-danger fw-bold">-</span></p>
+                                        <p class="mb-0"><b>หมายเหตุเพิ่มเติม:</b> <span id="det-Note">-</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><b>ช่างเทคนิค:</b> <span class="badge bg-secondary" id="det-Technician">ยังไม่ได้ระบุ</span></p>
+                                        <p class="mb-1"><b>วันรับงาน:</b> <span id="det-ReceiveDate">-</span></p>
+                                        <p class="mb-1"><b>วันส่งกลับที่คาดไว้:</b> <span id="det-DueDate">-</span></p>
+                                        <p class="mb-0"><b>วันที่ดำเนินการเสร็จ:</b> <span id="det-CompleteDate">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial view inside detail modal -->
+                        <div class="col-md-12 staff-only-content" style="display: none;">
+                            <div class="card border-0 p-3 shadow-sm bg-white rounded-3 border-start border-3 border-success text-dark">
+                                <h6 class="text-success border-bottom pb-2 fw-bold"><i class="fa-solid fa-coins me-2"></i>การเงินและค่าบริการ</h6>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">ราคาซ่อมรวม</small>
+                                        <span class="fw-bold fs-5 text-success">฿<span id="det-Price">0.00</span></span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">ค่าอะไหล่/ต้นทุน</small>
+                                        <span class="fw-bold fs-5 text-danger">฿<span id="det-PartsCost">0.00</span></span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">กำไรสุทธิ</small>
+                                        <span class="fw-bold fs-5 text-primary">฿<span id="det-Profit">0.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Management Section -->
+                    <div class="card border-0 p-3 mt-4 shadow-sm bg-white rounded-3">
+                        <h6 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-camera me-2"></i>คลังภาพความคืบหน้าการซ่อมแซม</h6>
+                        
+                        <div class="row g-3">
+                            <!-- Image 1 -->
+                            <div class="col-md-4 text-center">
+                                <span class="fw-semibold text-muted d-block mb-2">ภาพก่อนการซ่อม (Before)</span>
+                                <div id="div-Preview-Before" class="mb-2"></div>
+                                <div class="image-upload-box" onclick="triggerFileInput('Before')" id="upload-box-Before">
+                                    <i class="fa-solid fa-cloud-arrow-up text-secondary fs-3 d-block mb-1"></i>
+                                    <span class="small text-muted">คลิกเพื่ออัปโหลด</span>
+                                </div>
+                                <input type="file" id="fileInput-Before" style="display: none;" accept="image/*" onchange="handleImageFileSelect(this, 'Before')">
+                            </div>
+
+                            <!-- Image 2 -->
+                            <div class="col-md-4 text-center">
+                                <span class="fw-semibold text-muted d-block mb-2">ภาพระหว่างการซ่อม (During)</span>
+                                <div id="div-Preview-During" class="mb-2"></div>
+                                <div class="image-upload-box" onclick="triggerFileInput('During')" id="upload-box-During">
+                                    <i class="fa-solid fa-cloud-arrow-up text-secondary fs-3 d-block mb-1"></i>
+                                    <span class="small text-muted">คลิกเพื่ออัปโหลด</span>
+                                </div>
+                                <input type="file" id="fileInput-During" style="display: none;" accept="image/*" onchange="handleImageFileSelect(this, 'During')">
+                            </div>
+
+                            <!-- Image 3 -->
+                            <div class="col-md-4 text-center">
+                                <span class="fw-semibold text-muted d-block mb-2">ภาพหลังการซ่อมเสร็จ (After)</span>
+                                <div id="div-Preview-After" class="mb-2"></div>
+                                <div class="image-upload-box" onclick="triggerFileInput('After')" id="upload-box-After">
+                                    <i class="fa-solid fa-cloud-arrow-up text-secondary fs-3 d-block mb-1"></i>
+                                    <span class="small text-muted">คลิกเพื่ออัปโหลด</span>
+                                </div>
+                                <input type="file" id="fileInput-After" style="display: none;" accept="image/*" onchange="handleImageFileSelect(this, 'After')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-white border-0 py-3">
+                    <button class="btn btn-outline-secondary me-auto text-dark" onclick="printRepairSlip()"><i class="fa-solid fa-print me-1"></i>พิมพ์ใบรับซ่อม</button>
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Edit Repair Entry -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title">แก้ไขข้อมูลและเปลี่ยนสถานะงานซ่อม</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editRepairForm" onsubmit="submitEditForm(event)">
+                    <input type="hidden" id="edit-RepairID">
+                    <div class="modal-body p-4 text-dark">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">สถานะงานซ่อมปัจจุบัน</label>
+                            <select id="edit-Status" class="form-select" required>
+                                <option value="รับเครื่องแล้ว">รับเครื่องแล้ว (รับงานเข้าระบบ)</option>
+                                <option value="รอตรวจสอบ">รอตรวจสอบ (รอวิเคราะห์บอร์ดและอะไหล่)</option>
+                                <option value="กำลังซ่อม">กำลังซ่อม (กำลังทำการเปลี่ยน/แก้ไขอุปกรณ์)</option>
+                                <option value="รออะไหล่">รออะไหล่ (สั่งของหรืออะไหล่จากภายนอก)</option>
+                                <option value="ซ่อมเสร็จ">ซ่อมเสร็จ (ผ่านการตรวจสอบระบบ QC)</option>
+                                <option value="ส่งคืนแล้ว">ส่งคืนแล้ว (ส่งมอบสินค้าให้ลูกค้าแล้ว)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">ช่างเทคนิคผู้ดูแลรับผิดชอบ</label>
+                            <select id="edit-Technician" class="form-select">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">ค่าซ่อม/ค่าบริการ (฿)</label>
+                                <input type="number" id="edit-Price" class="form-control" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">ต้นทุนค่าอะไหล่ (฿)</label>
+                                <input type="number" id="edit-PartsCost" class="form-control" min="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">วันนัดหมายส่งคืน</label>
+                            <input type="date" id="edit-DueDate" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">รายละเอียดอาการเสียเพิ่มเติม</label>
+                            <textarea id="edit-Problem" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">บันทึกช่วยจำเพิ่มเติม / หมายเหตุ</label>
+                            <textarea id="edit-Note" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary px-4"><i class="fa-solid fa-circle-check me-2"></i>ยืนยันอัปเดต</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Technician User Form -->
+    <div class="modal fade" id="techUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title" id="techUserModalTitle">เพิ่มช่างผู้ใช้งาน</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="techUserForm" onsubmit="submitTechUserForm(event)">
+                    <input type="hidden" id="tech-actionType" value="add">
+                    <div class="modal-body p-3 text-dark">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">ชื่อผู้ใช้งาน (Username) *</label>
+                            <input type="text" id="tech-Username" class="form-control" required placeholder="เช่น tech01">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">รหัสผ่าน (Password) *</label>
+                            <input type="password" id="tech-Password" class="form-control" required placeholder="ความยาว 6 ตัวขึ้นไป">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">ชื่อ-นามสกุลช่าง *</label>
+                            <input type="text" id="tech-Name" class="form-control" required placeholder="เช่น ช่างแดง ดั่งใจ">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">ระดับสิทธิ์ (Role) *</label>
+                            <select id="tech-Role" class="form-select" required>
+                                <option value="Technician">Technician (จัดการงานซ่อม อัปรูป)</option>
+                                <option value="Staff">Staff (รับเครื่อง ออกใบรับซ่อม แก้สถานะ)</option>
+                                <option value="Admin">Admin (เต็มสิทธิ์ จัดการระบบ การเงิน)</option>
+                            </select>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">สถานะบัญชี</label>
+                            <select id="tech-Active" class="form-select" required>
+                                <option value="Yes">ใช้งานปกติ (Active)</option>
+                                <option value="No">ระงับชั่วคราว (Disabled)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-2">
+                        <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">ปิด</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4"><i class="fa-solid fa-save me-1"></i>บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden PRINT SLIP Template Area -->
+    <div id="printSlipContainer" class="d-none print-area" style="padding: 20px; color: black; background: white;">
+        <!-- Filled dynamically via javascript -->
+    </div>
+
+    <!-- JS Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Standalone JS Controller -->
+    <script src="script.js"></script>
+</body>
+</html>
