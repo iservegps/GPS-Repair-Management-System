@@ -60,10 +60,17 @@
                 
                 <ul class="navbar-nav ms-auto align-items-center">
                     <!-- Light/Dark Mode Switcher -->
-                    <li class="nav-item me-3">
+                    <li class="nav-item me-2">
                         <button class="btn btn-link nav-link text-white shadow-none border-0" id="theme-toggle-btn" onclick="toggleTheme()" title="สลับธีม สว่าง/มืด">
                             <i class="fa-solid fa-moon"></i>
                         </button>
+                    </li>
+                    <!-- Auto-Refresh Indicator -->
+                    <li class="nav-item me-3" id="refresh-indicator-item" style="display: none;">
+                        <span class="badge bg-success bg-opacity-25 text-light px-2 py-1 rounded-pill" style="font-size: 0.7rem; cursor: pointer;" onclick="reloadAllData()" title="คลิกเพื่อรีเฟรชข้อมูลทันที">
+                            <i class="fa-solid fa-arrows-rotate me-1 fa-spin-pulse" style="animation-duration: 3s;"></i>
+                            <span id="last-refresh-time">Auto-Sync</span>
+                        </span>
                     </li>
                     <!-- Auth Controls -->
                     <li class="nav-item" id="login-nav-item">
