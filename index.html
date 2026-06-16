@@ -308,27 +308,80 @@
                 </div>
             </div>
 
+            <!-- Mini Stats Grid for Quick Overview -->
+            <div class="mini-stats-grid">
+                <div class="mini-stat-card" onclick="filterByStatusPill('')">
+                    <div class="mini-stat-value text-primary" id="manage-stat-Total">0</div>
+                    <div class="mini-stat-label">งานซ่อมทั้งหมด</div>
+                </div>
+                <div class="mini-stat-card" onclick="filterByStatusPill('รอตรวจสอบ')">
+                    <div class="mini-stat-value text-warning" id="manage-stat-Pending">0</div>
+                    <div class="mini-stat-label">รอตรวจสอบ</div>
+                </div>
+                <div class="mini-stat-card" onclick="filterByStatusPill('กำลังซ่อม')">
+                    <div class="mini-stat-value text-info" id="manage-stat-Fixing">0</div>
+                    <div class="mini-stat-label">กำลังซ่อม</div>
+                </div>
+                <div class="mini-stat-card" onclick="filterByStatusPill('ซ่อมเสร็จ')">
+                    <div class="mini-stat-value text-success" id="manage-stat-Finished">0</div>
+                    <div class="mini-stat-label">ซ่อมเสร็จ / ส่งคืน</div>
+                </div>
+            </div>
+
             <!-- Filter Controls -->
-            <div class="card border-0 p-3 mb-4 shadow-sm bg-white rounded-3">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-dark">กรองตามสถานะ</label>
-                        <select id="filter-Status" class="form-select" onchange="applyFilters()">
-                            <option value="">-- แสดงทั้งหมด --</option>
-                            <option value="รับเครื่องแล้ว">รับเครื่องแล้ว</option>
-                            <option value="รอตรวจสอบ">รอตรวจสอบ</option>
-                            <option value="กำลังซ่อม">กำลังซ่อม</option>
-                            <option value="รออะไหล่">รออะไหล่</option>
-                            <option value="ซ่อมเสร็จ">ซ่อมเสร็จ</option>
-                            <option value="ส่งคืนแล้ว">ส่งคืนแล้ว</option>
-                        </select>
+            <div class="card border-0 p-3 mb-4 shadow-sm bg-white rounded-4">
+                <div class="d-flex flex-column gap-3">
+                    <!-- Quick Filter Pills -->
+                    <div>
+                        <label class="form-label small fw-bold text-dark mb-2">ตัวเลือกด่วน (Quick Filter)</label>
+                        <div class="filter-pills-container">
+                            <button class="filter-pill active" id="pill-all" onclick="filterByStatusPill('')">
+                                <i class="fa-solid fa-layer-group"></i>ทั้งหมด
+                            </button>
+                            <button class="filter-pill" id="pill-received" onclick="filterByStatusPill('รับเครื่องแล้ว')">
+                                <span class="status-dot bg-secondary"></span>รับเครื่องแล้ว
+                            </button>
+                            <button class="filter-pill" id="pill-pending" onclick="filterByStatusPill('รอตรวจสอบ')">
+                                <span class="status-dot bg-warning"></span>รอตรวจสอบ
+                            </button>
+                            <button class="filter-pill" id="pill-fixing" onclick="filterByStatusPill('กำลังซ่อม')">
+                                <span class="status-dot bg-info"></span>กำลังซ่อม
+                            </button>
+                            <button class="filter-pill" id="pill-spare" onclick="filterByStatusPill('รออะไหล่')">
+                                <span class="status-dot bg-primary"></span>รออะไหล่
+                            </button>
+                            <button class="filter-pill" id="pill-finished" onclick="filterByStatusPill('ซ่อมเสร็จ')">
+                                <span class="status-dot bg-success"></span>ซ่อมเสร็จ
+                            </button>
+                            <button class="filter-pill" id="pill-returned" onclick="filterByStatusPill('ส่งคืนแล้ว')">
+                                <span class="status-dot bg-purple"></span>ส่งคืนแล้ว
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-dark">กรองตามช่างเทคนิค</label>
-                        <select id="filter-Technician" class="form-select" onchange="applyFilters()">
-                            <option value="">-- แสดงทั้งหมด --</option>
-                            <!-- Techs populated dynamically -->
-                        </select>
+
+                    <hr class="my-0 text-muted opacity-25">
+
+                    <!-- Dropdown Filters -->
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark mb-1">กรองตามสถานะแบบเลือก</label>
+                            <select id="filter-Status" class="form-select" onchange="applyFiltersFromDropdown()">
+                                <option value="">-- แสดงทั้งหมด --</option>
+                                <option value="รับเครื่องแล้ว">รับเครื่องแล้ว</option>
+                                <option value="รอตรวจสอบ">รอตรวจสอบ</option>
+                                <option value="กำลังซ่อม">กำลังซ่อม</option>
+                                <option value="รออะไหล่">รออะไหล่</option>
+                                <option value="ซ่อมเสร็จ">ซ่อมเสร็จ</option>
+                                <option value="ส่งคืนแล้ว">ส่งคืนแล้ว</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark mb-1">กรองตามช่างเทคนิค</label>
+                            <select id="filter-Technician" class="form-select" onchange="applyFilters()">
+                                <option value="">-- แสดงทั้งหมด --</option>
+                                <!-- Techs populated dynamically -->
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -336,7 +389,7 @@
             <!-- Repairs Main DataTable -->
             <div class="card border-0 p-3 shadow-sm rounded-4">
                 <div class="table-responsive">
-                    <table id="repairsTable" class="table table-hover w-100 table-striped">
+                    <table id="repairsTable" class="table table-hover w-100 table-premium">
                         <thead>
                             <tr>
                                 <th>รหัสงานซ่อม</th>
