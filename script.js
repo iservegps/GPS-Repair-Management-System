@@ -4,7 +4,7 @@
  */
 
 // CONFIGURATION: Replace this with your Google Apps Script Web App URL after deployment
-var API_URL = "https://script.google.com/macros/s/AKfycbwiN2uRXOWjiHVeUTvr2tWTrjYY3_LfMhruS6ZCYLSTDvs9AdR1VKvaNEUsh1BR9KioIg/exec";
+var API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL";
 
 // Fallback to localStorage if not hardcoded (allows testing on the fly)
 if (API_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL" || !API_URL) {
@@ -593,6 +593,7 @@ function renderRepairsTable(data) {
   if ($.fn.DataTable.isDataTable('#repairsTable')) {
     var table = $('#repairsTable').DataTable();
     table.clear().rows.add(data).draw(false);
+    applyFilters();
   } else {
     $('#repairsTable').DataTable({
       data: data,
@@ -645,10 +646,14 @@ function renderRepairsTable(data) {
         url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
       }
     });
+    applyFilters();
   }
 }
 
 function applyFilters() {
+  if (!$.fn.DataTable.isDataTable('#repairsTable')) {
+    return;
+  }
   var table = $('#repairsTable').DataTable();
   var status = $('#filter-Status').val();
   var tech = $('#filter-Technician').val();
