@@ -4,7 +4,7 @@
  */
 
 // CONFIGURATION: Replace this with your Google Apps Script Web App URL after deployment
-var API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL";
+var API_URL = "https://script.google.com/macros/s/AKfycbwiN2uRXOWjiHVeUTvr2tWTrjYY3_LfMhruS6ZCYLSTDvs9AdR1VKvaNEUsh1BR9KioIg/exec";
 
 // Fallback to localStorage if not hardcoded (allows testing on the fly)
 if (API_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL" || !API_URL) {
@@ -590,6 +590,9 @@ function populateTechDropdowns(techs) {
 }
 
 function renderRepairsTable(data) {
+  // Update mini stats grid
+  updateManageStatsBoard(data);
+
   if ($.fn.DataTable.isDataTable('#repairsTable')) {
     var table = $('#repairsTable').DataTable();
     table.clear().rows.add(data).draw(false);
@@ -599,18 +602,23 @@ function renderRepairsTable(data) {
       data: data,
       order: [[1, 'desc']],
       columns: [
-        { data: 'RepairID', className: 'fw-bold text-primary' },
+        { 
+          data: 'RepairID', 
+          render: function(val) {
+            return '<span class="badge-repair-id">' + val + '</span>';
+          }
+        },
         { data: 'ReceiveDate' },
         { 
           data: null,
           render: function(row) {
-            return '<div class="fw-semibold">' + row.CustomerName + '</div><small class="text-secondary">' + row.Phone + '</small>';
+            return '<div class="fw-bold text-dark">' + row.CustomerName + '</div><div class="small text-muted"><i class="fa-solid fa-phone me-1 text-secondary" style="font-size: 10px;"></i>' + row.Phone + '</div>';
           }
         },
         { 
           data: null,
           render: function(row) {
-            return (row.Brand || '-') + ' / ' + (row.Model || '-');
+            return '<div class="fw-medium text-dark">' + (row.Brand || '-') + '</div><div class="small text-muted">' + (row.Model || '-') + '</div>';
           }
         },
         { data: 'SerialNumber' },
@@ -624,21 +632,21 @@ function renderRepairsTable(data) {
         { 
           data: 'Technician',
           render: function(val) {
-            return val ? '<span class="small fw-semibold text-secondary"><i class="fa-solid fa-user-gear me-1"></i>' + val + '</span>' : '<span class="text-muted small">ยังไม่จ่ายงาน</span>';
+            return val ? '<span class="badge bg-light text-dark border p-2 rounded-3 fw-medium"><i class="fa-solid fa-user-gear me-1 text-primary"></i>' + val + '</span>' : '<span class="badge bg-light text-muted border p-2 rounded-3 fw-normal" style="border-style: dashed !important;"><i class="fa-solid fa-user-slash me-1 text-secondary"></i>ยังไม่จ่ายงาน</span>';
           }
         },
         {
           data: null,
           render: function(row) {
-            var detailsBtn = '<button class="btn btn-light border text-primary btn-sm me-1" onclick="openDetailsModal(\'' + row.RepairID + '\')" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>';
-            var editBtn = '<button class="btn btn-light border text-warning btn-sm me-1" onclick="openEditModal(\'' + row.RepairID + '\')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>';
+            var detailsBtn = '<button class="action-btn action-btn-view me-1" onclick="openDetailsModal(\'' + row.RepairID + '\')" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>';
+            var editBtn = '<button class="action-btn action-btn-edit me-1" onclick="openEditModal(\'' + row.RepairID + '\')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>';
             var deleteBtn = '';
             
             if (userSession.role === 'Admin') {
-              deleteBtn = '<button class="btn btn-light border text-danger btn-sm" onclick="deleteRepairJob(\'' + row.RepairID + '\')" title="ลบงานซ่อม"><i class="fa-solid fa-trash"></i></button>';
+              deleteBtn = '<button class="action-btn action-btn-delete" onclick="deleteRepairJob(\'' + row.RepairID + '\')" title="ลบงานซ่อม"><i class="fa-solid fa-trash"></i></button>';
             }
             
-            return '<div class="btn-group">' + detailsBtn + editBtn + deleteBtn + '</div>';
+            return '<div class="d-flex">' + detailsBtn + editBtn + deleteBtn + '</div>';
           }
         }
       ],
@@ -648,6 +656,64 @@ function renderRepairsTable(data) {
     });
     applyFilters();
   }
+}
+
+function updateManageStatsBoard(data) {
+  var total = data.length;
+  var pending = data.filter(function(r) { return r.Status === 'รอตรวจสอบ' || r.Status === 'รับเครื่องแล้ว'; }).length;
+  var fixing = data.filter(function(r) { return r.Status === 'กำลังซ่อม' || r.Status === 'รออะไหล่'; }).length;
+  var finished = data.filter(function(r) { return r.Status === 'ซ่อมเสร็จ' || r.Status === 'ส่งคืนแล้ว'; }).length;
+  
+  $('#manage-stat-Total').text(total);
+  $('#manage-stat-Pending').text(pending);
+  $('#manage-stat-Fixing').text(fixing);
+  $('#manage-stat-Finished').text(finished);
+}
+
+function filterByStatusPill(status) {
+  $('#filter-Status').val(status);
+  
+  $('.filter-pill').removeClass('active');
+  if (status === '') {
+    $('#pill-all').addClass('active');
+  } else if (status === 'รับเครื่องแล้ว') {
+    $('#pill-received').addClass('active');
+  } else if (status === 'รอตรวจสอบ') {
+    $('#pill-pending').addClass('active');
+  } else if (status === 'กำลังซ่อม') {
+    $('#pill-fixing').addClass('active');
+  } else if (status === 'รออะไหล่') {
+    $('#pill-spare').addClass('active');
+  } else if (status === 'ซ่อมเสร็จ') {
+    $('#pill-finished').addClass('active');
+  } else if (status === 'ส่งคืนแล้ว') {
+    $('#pill-returned').addClass('active');
+  }
+  
+  applyFilters();
+}
+
+function applyFiltersFromDropdown() {
+  var status = $('#filter-Status').val();
+  
+  $('.filter-pill').removeClass('active');
+  if (status === '') {
+    $('#pill-all').addClass('active');
+  } else if (status === 'รับเครื่องแล้ว') {
+    $('#pill-received').addClass('active');
+  } else if (status === 'รอตรวจสอบ') {
+    $('#pill-pending').addClass('active');
+  } else if (status === 'กำลังซ่อม') {
+    $('#pill-fixing').addClass('active');
+  } else if (status === 'รออะไหล่') {
+    $('#pill-spare').addClass('active');
+  } else if (status === 'ซ่อมเสร็จ') {
+    $('#pill-finished').addClass('active');
+  } else if (status === 'ส่งคืนแล้ว') {
+    $('#pill-returned').addClass('active');
+  }
+  
+  applyFilters();
 }
 
 function applyFilters() {
