@@ -530,8 +530,14 @@ function loadManagePageData() {
   reloadAllData();
 }
 
-function reloadAllData() {
-  $('#repairsTable tbody').html('<tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><br><span class="small text-muted mt-2 d-block">กำลังอ่านข้อมูลจาก Google Sheets...</span></td></tr>');
+function reloadAllData(silent) {
+  if (!silent) {
+    Swal.fire({
+      title: 'กำลังดึงข้อมูลล่าสุด...',
+      allowOutsideClick: false,
+      didOpen: function() { Swal.showLoading(); }
+    });
+  }
   
   callAPI('getTechnicians', {}, 'GET')
     .then(function(res) {
@@ -543,9 +549,16 @@ function reloadAllData() {
     .then(function(res) {
       repairsCache = res.data;
       renderRepairsTable(repairsCache);
+      if (!silent) {
+        Swal.close();
+      }
     })
     .catch(function(error) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      if (!silent) {
+        Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      } else {
+        console.error("Silent reload error:", error);
+      }
     });
 }
 
@@ -553,6 +566,10 @@ function populateTechDropdowns(techs) {
   var addSelect = $('#add-Technician-Select');
   var editSelect = $('#edit-Technician');
   var filterSelect = $('#filter-Technician');
+  
+  var selectedAdd = addSelect.val();
+  var selectedEdit = editSelect.val();
+  var selectedFilter = filterSelect.val();
   
   addSelect.empty().append('<option value="">-- ยังไม่ระบุช่าง --</option>');
   editSelect.empty().append('<option value="">-- ยังไม่ระบุช่าง --</option>');
@@ -566,61 +583,69 @@ function populateTechDropdowns(techs) {
       filterSelect.append($('<option></option>').val(t.Name).text(t.Name));
     }
   });
+  
+  if (selectedAdd) addSelect.val(selectedAdd);
+  if (selectedEdit) editSelect.val(selectedEdit);
+  if (selectedFilter) filterSelect.val(selectedFilter);
 }
 
 function renderRepairsTable(data) {
-  $('#repairsTable').DataTable({
-    data: data,
-    destroy: true,
-    order: [[1, 'desc']],
-    columns: [
-      { data: 'RepairID', className: 'fw-bold text-primary' },
-      { data: 'ReceiveDate' },
-      { 
-        data: null,
-        render: function(row) {
-          return '<div class="fw-semibold">' + row.CustomerName + '</div><small class="text-secondary">' + row.Phone + '</small>';
-        }
-      },
-      { 
-        data: null,
-        render: function(row) {
-          return (row.Brand || '-') + ' / ' + (row.Model || '-');
-        }
-      },
-      { data: 'SerialNumber' },
-      { 
-        data: 'Status',
-        render: function(val) {
-          var badgeClass = getStatusBadgeClass(val);
-          return '<span class="status-badge ' + badgeClass + '">' + val + '</span>';
-        }
-      },
-      { 
-        data: 'Technician',
-        render: function(val) {
-          return val ? '<span class="small fw-semibold text-secondary"><i class="fa-solid fa-user-gear me-1"></i>' + val + '</span>' : '<span class="text-muted small">ยังไม่จ่ายงาน</span>';
-        }
-      },
-      {
-        data: null,
-        render: function(row) {
-          var detailsBtn = '<button class="btn btn-light border text-primary btn-sm me-1" onclick="openDetailsModal(\'' + row.RepairID + '\')" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>';
-          var editBtn = '<button class="btn btn-light border text-warning btn-sm me-1" onclick="openEditModal(\'' + row.RepairID + '\')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>';
-          var deleteBtn = '';
-          
-          if (userSession.role === 'Admin') {
-            deleteBtn = '<button class="btn btn-light border text-danger btn-sm" onclick="deleteRepairJob(\'' + row.RepairID + '\')" title="ลบงานซ่อม"><i class="fa-solid fa-trash"></i></button>';
+  if ($.fn.DataTable.isDataTable('#repairsTable')) {
+    var table = $('#repairsTable').DataTable();
+    table.clear().rows.add(data).draw(false);
+  } else {
+    $('#repairsTable').DataTable({
+      data: data,
+      order: [[1, 'desc']],
+      columns: [
+        { data: 'RepairID', className: 'fw-bold text-primary' },
+        { data: 'ReceiveDate' },
+        { 
+          data: null,
+          render: function(row) {
+            return '<div class="fw-semibold">' + row.CustomerName + '</div><small class="text-secondary">' + row.Phone + '</small>';
           }
-          
-          return '<div class="btn-group">' + detailsBtn + editBtn + deleteBtn + '</div>';
+        },
+        { 
+          data: null,
+          render: function(row) {
+            return (row.Brand || '-') + ' / ' + (row.Model || '-');
+          }
+        },
+        { data: 'SerialNumber' },
+        { 
+          data: 'Status',
+          render: function(val) {
+            var badgeClass = getStatusBadgeClass(val);
+            return '<span class="status-badge ' + badgeClass + '">' + val + '</span>';
+          }
+        },
+        { 
+          data: 'Technician',
+          render: function(val) {
+            return val ? '<span class="small fw-semibold text-secondary"><i class="fa-solid fa-user-gear me-1"></i>' + val + '</span>' : '<span class="text-muted small">ยังไม่จ่ายงาน</span>';
+          }
+        },
+        {
+          data: null,
+          render: function(row) {
+            var detailsBtn = '<button class="btn btn-light border text-primary btn-sm me-1" onclick="openDetailsModal(\'' + row.RepairID + '\')" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>';
+            var editBtn = '<button class="btn btn-light border text-warning btn-sm me-1" onclick="openEditModal(\'' + row.RepairID + '\')" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen-to-square"></i></button>';
+            var deleteBtn = '';
+            
+            if (userSession.role === 'Admin') {
+              deleteBtn = '<button class="btn btn-light border text-danger btn-sm" onclick="deleteRepairJob(\'' + row.RepairID + '\')" title="ลบงานซ่อม"><i class="fa-solid fa-trash"></i></button>';
+            }
+            
+            return '<div class="btn-group">' + detailsBtn + editBtn + deleteBtn + '</div>';
+          }
         }
+      ],
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
       }
-    ],
-    language: {
-      url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/th.json'
-    }
-  });
+    });
+  }
 }
 
 function applyFilters() {
@@ -748,7 +773,7 @@ function submitEditForm(event) {
         timer: 1500,
         showConfirmButton: false
       }).then(function() {
-        reloadAllData();
+        reloadAllData(true);
       });
     })
     .catch(function(error) {
@@ -776,8 +801,9 @@ function deleteRepairJob(repairId) {
 
       callAPI('deleteRepair', { repairId: repairId })
         .then(function() {
-          Swal.fire('ลบเสร็จสิ้น', 'ข้อมูลสั่งซ่อมถูกทำลายแล้ว', 'success');
-          reloadAllData();
+          Swal.fire('ลบเสร็จสิ้น', 'ข้อมูลสั่งซ่อมถูกทำลายแล้ว', 'success').then(function() {
+            reloadAllData(true);
+          });
         })
         .catch(function(error) {
           Swal.fire('ผิดพลาด', error.message, 'error');
@@ -937,10 +963,11 @@ function handleImageFileSelect(input, type) {
 
     callAPI('uploadImage', payload)
       .then(function(res) {
-        Swal.fire('อัปโหลดเสร็จสิ้น!', 'ภาพประวัติถูกบันทึกสำเร็จ', 'success');
+        Swal.fire('อัปโหลดเสร็จสิ้น!', 'ภาพประวัติถูกบันทึกสำเร็จ', 'success').then(function() {
+          reloadAllData(true);
+        });
         input.value = '';
         setupDetailsImagePreview(type, res.url);
-        reloadAllData();
       })
       .catch(function(error) {
         Swal.fire('อัปโหลดล้มเหลว', error.message, 'error');
