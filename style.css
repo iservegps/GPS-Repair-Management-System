@@ -1,0 +1,461 @@
+/* 
+ * GPS Repair Management System - style.css
+ * Extracted stylesheet for static GitHub Pages hosting
+ */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Light Theme Variables */
+  --bg-body: #f4f6fa;
+  --bg-card: #ffffff;
+  --bg-nav: rgba(30, 41, 59, 0.95);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --primary-color: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-light: #e0f2fe;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: blur(12px);
+  
+  --badge-pending: #e0f2fe;
+  --text-pending: #0369a1;
+  --badge-fixing: #fef3c7;
+  --text-fixing: #b45309;
+  --badge-finished: #dcfce7;
+  --text-finished: #15803d;
+  --badge-returned: #f3e8ff;
+  --text-returned: #6b21a8;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme Variables */
+  --bg-body: #0f172a;
+  --bg-card: #1e293b;
+  --bg-nav: rgba(15, 23, 42, 0.95);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --primary-color: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --primary-light: #0c4a6e;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  
+  --badge-pending: #0c4a6e;
+  --text-pending: #38bdf8;
+  --badge-fixing: #78350f;
+  --text-fixing: #fde047;
+  --badge-finished: #064e3b;
+  --text-finished: #4ade80;
+  --badge-returned: #581c87;
+  --text-returned: #c084fc;
+}
+
+/* Global Styles */
+body {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: 'Prompt', 'Segoe UI', sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
+}
+
+.page-section {
+  display: none;
+}
+
+.page-section.active {
+  display: block;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header & Navbar */
+.navbar {
+  background: var(--bg-nav) !important;
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1030;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.nav-link {
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px;
+  transition: all 0.2s;
+  color: #f1f5f9 !important;
+  opacity: 0.8;
+}
+
+.nav-link:hover, .nav-link.active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary-color) !important;
+}
+
+/* Cards & Containers */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  border-radius: 16px;
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+  overflow: hidden;
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-md);
+}
+
+.card-counter {
+  border-left: 6px solid var(--primary-color) !important;
+  cursor: pointer;
+}
+
+.card-counter:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Form Controls */
+.form-control, .form-select {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-card);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+  color: var(--text-primary);
+}
+
+.form-control::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-light {
+  background-color: var(--bg-body);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem;
+}
+
+.btn-light:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Custom Badges */
+.status-badge {
+  padding: 0.35em 0.8em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 20px;
+  display: inline-block;
+  text-align: center;
+}
+
+.badge-pending { background-color: var(--badge-pending); color: var(--text-pending); }
+.badge-fixing { background-color: var(--badge-fixing); color: var(--text-fixing); }
+.badge-finished { background-color: var(--badge-finished); color: var(--text-finished); }
+.badge-returned { background-color: var(--badge-returned); color: var(--text-returned); }
+
+/* DataTables Customization */
+.dataTables_wrapper {
+  color: var(--text-primary);
+}
+
+table.dataTable {
+  border-collapse: collapse !important;
+  margin-top: 15px !important;
+  margin-bottom: 15px !important;
+}
+
+table.dataTable thead th {
+  background-color: var(--primary-light) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 2px solid var(--border-color) !important;
+  font-weight: 600;
+  padding: 12px 10px !important;
+}
+
+table.dataTable tbody td {
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 10px !important;
+  vertical-align: middle;
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+.page-item.active .page-link {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.page-link {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dataTables_filter input {
+  margin-left: 0.5em;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+/* Modals */
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-primary);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1.2rem;
+}
+
+/* Timeline Components */
+.timeline-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin: 2rem 0;
+  padding: 0 1rem;
+}
+
+.timeline-steps::after {
+  content: "";
+  position: absolute;
+  height: 4px;
+  background: var(--border-color);
+  top: 22px;
+  left: 3%;
+  right: 3%;
+  z-index: 1;
+}
+
+.timeline-step {
+  z-index: 2;
+  text-align: center;
+  position: relative;
+  flex: 1;
+}
+
+.timeline-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-body);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px auto;
+  font-weight: 600;
+  border: 4px solid var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.timeline-step.active .timeline-icon {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 5px rgba(2, 132, 199, 0.2);
+  transform: scale(1.1);
+  animation: pulse 2s infinite;
+}
+
+.timeline-step.completed .timeline-icon {
+  background: #10b981;
+  color: white;
+  border-color: #d1fae5;
+}
+
+.timeline-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.3s;
+}
+
+.timeline-step.active .timeline-text {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.timeline-step.completed .timeline-text {
+  color: #10b981;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(2, 132, 199, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0); }
+}
+
+@media (max-width: 768px) {
+  .timeline-steps {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 2rem;
+  }
+  .timeline-steps::after {
+    width: 4px;
+    height: 90%;
+    top: 22px;
+    bottom: 22px;
+    left: 42px;
+  }
+  .timeline-step {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    margin-bottom: 1.5rem;
+  }
+  .timeline-icon {
+    margin: 0 20px 0 0;
+  }
+}
+
+/* Image Upload Container */
+.image-upload-box {
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  background-color: var(--bg-body);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-upload-box:hover {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+}
+
+.preview-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.preview-image-container img {
+  border-radius: 8px;
+  max-width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+/* Public tracking styling */
+.tracking-wrapper {
+  background: var(--bg-card);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  max-width: 800px;
+  margin: 3rem auto;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-body);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Printing Optimization */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  .navbar, .btn-group, .btn, .no-print, form, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .print-area {
+    display: block !important;
+    width: 100% !important;
+  }
+}
