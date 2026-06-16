@@ -23,6 +23,9 @@ var techsCache = [];
 var settingsCache = {};
 var currentActiveRepairId = '';
 var monthlyTrendChart = null;
+var autoRefreshTimer = null;
+var AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+var lastRefreshTime = null;
 
 $(document).ready(function() {
   // 1. Theme Configuration
@@ -40,6 +43,7 @@ $(document).ready(function() {
   if (sessionStr) {
     userSession = JSON.parse(sessionStr);
     updateAuthUI();
+    startAutoRefresh();
   } else {
     showSection('track-page');
   }
@@ -224,6 +228,7 @@ function handleLogin(event) {
         timer: 1500,
         showConfirmButton: false
       }).then(function() {
+        startAutoRefresh();
         showSection('dashboard-page');
         $('#loginForm')[0].reset();
       });
@@ -234,6 +239,7 @@ function handleLogin(event) {
 }
 
 function logoutUser() {
+  stopAutoRefresh();
   userSession.isLoggedIn = false;
   userSession.username = '';
   userSession.name = '';
@@ -252,10 +258,71 @@ function logoutUser() {
   });
 }
 
+/* ==========================================================================
+   Auto-Refresh for Multi-User Concurrency
+   ========================================================================== */
+
+/**
+ * Starts a periodic background data refresh so that all users see fresh data.
+ */
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(function() {
+    autoRefreshData();
+  }, AUTO_REFRESH_INTERVAL);
+}
+
+/**
+ * Stops the periodic background refresh.
+ */
+function stopAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+}
+
+/**
+ * Silently refreshes repair data in the background without showing loading spinners.
+ * Only refreshes if the user is logged in and on a data-driven page.
+ */
+function autoRefreshData() {
+  if (!userSession.isLoggedIn || !API_URL) return;
+  
+  var activePage = $('.page-section.active').attr('id');
+  
+  if (activePage === 'manage-page') {
+    // Silently refresh the manage table
+    callAPI('getRepairs', {}, 'GET')
+      .then(function(res) {
+        repairsCache = res.data;
+        renderRepairsTable(repairsCache);
+        updateLastRefreshIndicator();
+      })
+      .catch(function() { /* silent fail */ });
+  } else if (activePage === 'dashboard-page') {
+    loadDashboardData();
+    updateLastRefreshIndicator();
+  }
+}
+
+/**
+ * Updates the last-refresh timestamp indicator in the UI.
+ */
+function updateLastRefreshIndicator() {
+  lastRefreshTime = new Date();
+  var timeStr = lastRefreshTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  var indicator = $('#last-refresh-time');
+  if (indicator.length) {
+    indicator.text('อัปเดต: ' + timeStr);
+  }
+}
+
 function updateAuthUI() {
   if (userSession.isLoggedIn) {
     $('#login-nav-item').hide();
     $('#user-profile-menu').show();
+    $('#refresh-indicator-item').show();
     $('#user-display-name').text(userSession.name);
     $('#user-display-role').text('สิทธิ์: ' + userSession.role);
     $('#main-menu').show();
@@ -273,6 +340,7 @@ function updateAuthUI() {
   } else {
     $('#login-nav-item').show();
     $('#user-profile-menu').hide();
+    $('#refresh-indicator-item').hide();
     $('#main-menu').hide();
   }
 }
@@ -612,19 +680,41 @@ function submitIntakeForm(event) {
 }
 
 function openEditModal(repairId) {
-  var item = repairsCache.find(function(r) { return r.RepairID === repairId; });
-  if (!item) return;
+  // Always fetch fresh data from API before editing to prevent conflicts
+  Swal.fire({
+    title: 'กำลังโหลดข้อมูลล่าสุด...',
+    allowOutsideClick: false,
+    timer: 10000,
+    didOpen: function() { Swal.showLoading(); }
+  });
+  
+  callAPI('getRepairs', {}, 'GET')
+    .then(function(res) {
+      repairsCache = res.data;
+      updateLastRefreshIndicator();
+      
+      var item = repairsCache.find(function(r) { return r.RepairID === repairId; });
+      if (!item) {
+        Swal.fire('ไม่พบข้อมูล', 'งานซ่อมนี้อาจถูกลบโดยผู้ใช้อื่นไปแล้ว กรุณารีเฟรชข้อมูล', 'warning');
+        return;
+      }
 
-  $('#edit-RepairID').val(item.RepairID);
-  $('#edit-Status').val(item.Status);
-  $('#edit-Technician').val(item.Technician || '');
-  $('#edit-Price').val(item.Price || 0);
-  $('#edit-PartsCost').val(item.PartsCost || 0);
-  $('#edit-DueDate').val(item.DueDate || '');
-  $('#edit-Problem').val(item.Problem || '');
-  $('#edit-Note').val(item.Note || '');
+      Swal.close();
+      
+      $('#edit-RepairID').val(item.RepairID);
+      $('#edit-Status').val(item.Status);
+      $('#edit-Technician').val(item.Technician || '');
+      $('#edit-Price').val(item.Price || 0);
+      $('#edit-PartsCost').val(item.PartsCost || 0);
+      $('#edit-DueDate').val(item.DueDate || '');
+      $('#edit-Problem').val(item.Problem || '');
+      $('#edit-Note').val(item.Note || '');
 
-  new bootstrap.Modal(document.getElementById('editModal')).show();
+      new bootstrap.Modal(document.getElementById('editModal')).show();
+    })
+    .catch(function(error) {
+      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+    });
 }
 
 function submitEditForm(event) {
@@ -701,11 +791,29 @@ function deleteRepairJob(repairId) {
    ========================================================================== */
 
 function openDetailsModal(repairId) {
-  var item = repairsCache.find(function(r) { return r.RepairID === repairId; });
-  if (!item) return;
-  currentActiveRepairId = repairId;
+  // Always fetch fresh data from API before viewing details
+  Swal.fire({
+    title: 'กำลังโหลดข้อมูลล่าสุด...',
+    allowOutsideClick: false,
+    timer: 10000,
+    didOpen: function() { Swal.showLoading(); }
+  });
+  
+  callAPI('getRepairs', {}, 'GET')
+    .then(function(res) {
+      repairsCache = res.data;
+      updateLastRefreshIndicator();
+      
+      var item = repairsCache.find(function(r) { return r.RepairID === repairId; });
+      if (!item) {
+        Swal.fire('ไม่พบข้อมูล', 'งานซ่อมนี้อาจถูกลบโดยผู้ใช้อื่นไปแล้ว กรุณารีเฟรชข้อมูล', 'warning');
+        return;
+      }
+      
+      currentActiveRepairId = repairId;
+      Swal.close();
 
-  $('#modalDetailTitle').text('ข้อมูลใบประวัติงานซ่อม: ' + item.RepairID);
+      $('#modalDetailTitle').text('ข้อมูลใบประวัติงานซ่อม: ' + item.RepairID);
   
   var step = getStatusStepNumber(item.Status);
   $('#modalTimeline .timeline-step').removeClass('active completed');
@@ -749,6 +857,10 @@ function openDetailsModal(repairId) {
   setupDetailsImagePreview('After', item.ImageAfter);
 
   new bootstrap.Modal(document.getElementById('detailsModal')).show();
+    })
+    .catch(function(error) {
+      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+    });
 }
 
 function setupDetailsImagePreview(type, url) {
