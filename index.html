@@ -417,23 +417,15 @@
             <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
                 <form id="addRepairForm" onsubmit="submitIntakeForm(event)">
                     <!-- block 1 -->
-                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-user me-2"></i>1. ข้อมูลติดต่อลูกค้า</h5>
+                    <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-user me-2"></i>1. ข้อมูลลูกค้า</h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold text-dark">ชื่อ-นามสกุลลูกค้า *</label>
-                            <input type="text" name="CustomerName" class="form-control" required placeholder="ระบุชื่อจริงและนามสกุล">
+                            <label class="form-label fw-semibold text-dark">User ลูกค้า *</label>
+                            <input type="text" name="CustomerName" class="form-control" required placeholder="ระบุ User ลูกค้า">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold text-dark">เบอร์โทรศัพท์ติดต่อ *</label>
-                            <input type="tel" name="Phone" class="form-control" required placeholder="เช่น 0801234567">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-dark">อีเมลติดต่อ</label>
-                            <input type="email" name="Email" class="form-control" placeholder="example@email.com">
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label fw-semibold text-dark">ที่อยู่จัดส่งส่งเครื่องคืน</label>
-                            <input type="text" name="Address" class="form-control" placeholder="บ้านเลขที่, ถนน, ตำบล, อำเภอ, จังหวัด">
+                            <label class="form-label fw-semibold text-dark">ทะเบียน *</label>
+                            <input type="tel" name="Phone" class="form-control" required placeholder="เช่น กข 1111 ขอนแก่น">
                         </div>
                     </div>
 
@@ -441,24 +433,16 @@
                     <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold"><i class="fa-solid fa-microchip me-2"></i>2. รายละเอียดเครื่อง GPS</h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold text-dark">ยี่ห้อเครื่อง</label>
-                            <input type="text" name="Brand" class="form-control" placeholder="เช่น Garmin, Kamaz">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label fw-semibold text-dark">รุ่นเครื่อง</label>
-                            <input type="text" name="Model" class="form-control" placeholder="เช่น Nuvi 2567">
+                            <input type="text" name="Model" class="form-control" placeholder="เช่น SM01L">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold text-dark">Serial Number *</label>
+                            <label class="form-label fw-semibold text-dark">SN/IMEI *</label>
                             <input type="text" name="SerialNumber" class="form-control" required placeholder="หมายเลขเครื่องใต้บอดี้">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold text-dark">หมายเลข IMEI</label>
-                            <input type="text" name="IMEI" class="form-control" placeholder="ระบุเลขอีมี่ (ถ้ามี)">
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-semibold text-dark">อุปกรณ์เสริมที่ส่งมาด้วย</label>
-                            <input type="text" name="Accessories" class="form-control" placeholder="เช่น สายชาร์จรถยนต์, ขาตั้งดูดกระจก, SD Card">
+                            <input type="text" name="Accessories" class="form-control" placeholder="เช่น สายไฟ, เสา GPS/GSM, เครื่องรูด">
                         </div>
                     </div>
 
