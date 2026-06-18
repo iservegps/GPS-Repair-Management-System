@@ -38,12 +38,13 @@ $(document).ready(function() {
     $('#configApiUrl').val(API_URL);
   }
 
-  // 3. Check Session from localStorage (เปลี่ยนเพื่อให้จดจำระบบไว้แม้ปิดเบราว์เซอร์)
+  // 3. Check Session from localStorage
   var sessionStr = localStorage.getItem('userSession');
   if (sessionStr) {
     userSession = JSON.parse(sessionStr);
     updateAuthUI();
     startAutoRefresh();
+    showSection('dashboard-page'); // <--- เพิ่มบรรทัดนี้ เพื่อให้กระโดดเข้าหน้าช่างทันที
   } else {
     showSection('track-page');
   }
