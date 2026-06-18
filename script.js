@@ -602,7 +602,7 @@ function renderRepairsTable(data) {
   } else {
     $('#repairsTable').DataTable({
       data: data,
-      order: [[1, 'desc']],
+      order: [[0, 'desc']],
       columns: [
         { 
           data: 'RepairID', 
