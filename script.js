@@ -38,7 +38,7 @@ $(document).ready(function() {
     $('#configApiUrl').val(API_URL);
   }
 
-// 3. Check Session from localStorage (เปลี่ยนเพื่อให้จดจำระบบไว้แม้ปิดเบราว์เซอร์)
+  // 3. Check Session from localStorage (เปลี่ยนเพื่อให้จดจำระบบไว้แม้ปิดเบราว์เซอร์)
   var sessionStr = localStorage.getItem('userSession');
   if (sessionStr) {
     userSession = JSON.parse(sessionStr);
@@ -208,7 +208,19 @@ function handleLogin(event) {
     didOpen: function() { Swal.showLoading(); }
   });
 
+  callAPI('login', { username: username, password: password })
+    .then(function(response) {
+      userSession.isLoggedIn = true;
+      userSession.username = response.username;
+      userSession.name = response.name;
+      userSession.role = response.role;
 
+      // เปลี่ยนมาบันทึกลง localStorage เพื่อจำรหัสไว้ตลอดไป
+      localStorage.setItem('userSession', JSON.stringify(userSession));
+      updateAuthUI();
+      
+      return loadPublicSettings(); // Ensure settings are loaded on login
+    })
     .then(function() {
       Swal.fire({
         icon: 'success',
@@ -234,8 +246,7 @@ function logoutUser() {
   userSession.name = '';
   userSession.role = '';
   
-  // เปลี่ยนมาล้างข้อมูลออกจาก localStorage เมื่อกดออกจากระบบ
-  localStorage.removeItem('userSession');
+  sessionStorage.removeItem('userSession');
   updateAuthUI();
   
   Swal.fire({
